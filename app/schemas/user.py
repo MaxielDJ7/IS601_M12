@@ -35,14 +35,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for user creation with password validation"""
     password: str = Field(
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="SecurePass123!",
-        description="User's password (8-72 characters)"
+        description="User's password (6-128 characters)"
     )
     confirm_password: str = Field(
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="SecurePass123!",
         description="Password confirmation"
     )
@@ -55,19 +55,31 @@ class UserCreate(UserBase):
         return self
 
     @model_validator(mode='after')
-    def validate_password_strength(self) -> "UserCreate":
+    def validate_password_rules(self) -> "UserCreate":
         """Validate password strength requirements"""
-        password = self.password
-        if len(password) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if not any(char.isupper() for char in password):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(char.islower() for char in password):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not any(char.isdigit() for char in password):
-            raise ValueError("Password must contain at least one digit")
-        if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in password):
-            raise ValueError("Password must contain at least one special character")
+        raw_password = self.password
+
+        if raw_password.startswith("$2"):
+            return self
+  
+       # password = self.password
+       # if len(password) < 6:
+       #     raise ValueError("Password must be at least 6 characters long")
+       # if not any(char.isupper() for char in password):
+       #     raise ValueError("Password must contain at least one uppercase letter")
+       # if not any(char.islower() for char in password):
+       #     raise ValueError("Password must contain at least one lowercase letter")
+       # if not any(char.isdigit() for char in password):
+       #     raise ValueError("Password must contain at least one digit")
+       # if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in password):
+       #     raise ValueError("Password must contain at least one special character")
+        if len(raw_password) < 6:
+            raise ValueError("Password must be at least 6 characters long")
+
+        if len(raw_password.encode("utf-8")) > 72:
+            raise ValueError("Password cannot be longer than 72 bytes")
+
+
         return self
 
     model_config = ConfigDict(
@@ -108,8 +120,8 @@ class UserLogin(BaseModel):
     )
     password: str = Field(
         ...,
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="SecurePass123!",
         description="Password"
     )
@@ -158,22 +170,22 @@ class PasswordUpdate(BaseModel):
     """Schema for password updates"""
     current_password: str = Field(
         ...,
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="OldPass123!",
         description="Current password"
     )
     new_password: str = Field(
         ...,
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="NewPass123!",
         description="New password"
     )
     confirm_new_password: str = Field(
         ...,
-        min_length=8,
-        max_length=72,
+        min_length=6,
+        max_length=128,
         example="NewPass123!",
         description="Confirm new password"
     )
